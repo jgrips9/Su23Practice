@@ -1,0 +1,268 @@
+
+> #Import data
+> reg_data = read.csv("states_SAT2006.csv", header = TRUE)
+
+> #Get descriptive data of variables
+> str(reg_data)
+'data.frame':	51 obs. of  7 variables:
+ $ region : int  3 1 1 3 1 1 2 3 NA 3 ...
+ $ csat   : int  991 920 932 1005 897 959 897 892 840 882 ...
+ $ expense: int  3627 8330 4309 3700 4491 5064 7602 5865 9259 5276 ...
+ $ percent: chr  "8%" "41%" "26%" "6%" ...
+ $ income : num  27.5 48.3 32.1 24.6 41.7 ...
+ $ high   : num  66.9 86.6 78.7 66.3 76.2 ...
+ $ college: num  15.7 23 20.3 13.3 23.4 ...
+
+> summary(reg_data)
+     region          csat           expense       percent         
+ Min.   :1.00   Min.   : 832.0   Min.   :2960   Length:51         
+ 1st Qu.:1.25   1st Qu.: 888.0   1st Qu.:4352   Class :character  
+ Median :3.00   Median : 926.0   Median :5000   Mode  :character  
+ Mean   :2.54   Mean   : 944.1   Mean   :5236                     
+ 3rd Qu.:3.00   3rd Qu.: 997.0   3rd Qu.:5794                     
+ Max.   :4.00   Max.   :1093.0   Max.   :9259                     
+ NA's   :1                                                        
+     income           high          college     
+ Min.   :23.46   Min.   :64.30   Min.   :12.30  
+ 1st Qu.:29.88   1st Qu.:73.50   1st Qu.:17.30  
+ Median :33.45   Median :76.70   Median :19.30  
+ Mean   :33.96   Mean   :76.26   Mean   :20.02  
+ 3rd Qu.:36.92   3rd Qu.:80.10   3rd Qu.:22.90  
+ Max.   :48.62   Max.   :86.60   Max.   :33.30  
+                                                
+
+> #Attempt linear regression. Predict csat from expense, percent, income, high, college
+> #This looks strange. What is going on here?
+> lm(csat ~ expe .... [TRUNCATED] 
+
+Call:
+lm(formula = csat ~ expense + percent + income + high + college, 
+    data = reg_data)
+
+Coefficients:
+(Intercept)      expense   percent11%   percent12%   percent13%   percent16%  
+  8.829e+02    2.635e-03   -1.901e+01   -9.301e+00   -5.552e+01   -1.710e+01  
+ percent17%   percent18%   percent22%   percent25%   percent26%   percent29%  
+ -7.866e+01   -5.596e+01   -6.262e+01   -1.049e+02   -9.294e+01   -7.867e+01  
+  percent4%   percent41%   percent44%   percent47%   percent48%   percent49%  
+ -1.073e+00   -1.265e+02   -1.404e+02   -1.233e+02   -1.378e+02   -1.222e+02  
+  percent5%   percent54%   percent55%   percent57%   percent58%    percent6%  
+  2.987e+01   -1.114e+02   -1.448e+02   -1.606e+02   -1.750e+02    2.709e+01  
+ percent60%   percent61%   percent62%   percent64%   percent67%   percent68%  
+ -1.304e+02   -1.338e+02   -1.678e+02   -1.371e+02   -1.428e+02   -1.454e+02  
+ percent71%   percent74%   percent75%   percent79%    percent8%   percent81%  
+ -1.915e+02   -1.454e+02   -1.320e+02   -1.364e+02   -1.209e+01   -1.363e+02  
+  percent9%       income         high      college  
+ -1.659e+01   -1.834e-01    1.666e+00    2.692e-01  
+
+
+> #Fix percent variable. Needs to be numeric. remove % and convert to numeric
+> class(reg_data$percent)
+[1] "character"
+
+> reg_data$percent <- as.numeric(gsub("%", "", reg_data$percent))
+
+> class(reg_data$percent)
+[1] "numeric"
+
+> #This looks better.
+> lm(csat ~ expense + percent + income + high + college, data = reg_data)
+
+Call:
+lm(formula = csat ~ expense + percent + income + high + college, 
+    data = reg_data)
+
+Coefficients:
+(Intercept)      expense      percent       income         high      college  
+ 851.564871     0.003353    -2.618177     0.105585     1.630841     2.030894  
+
+
+> #Remove outliers. missing data
+> #Missing data
+> #https://bookdown.org/rwnahhas/IntroToR/exclude-observations-with-missing-data.html#
+> reg_data <-  .... [TRUNCATED] 
+
+> #Outliers
+> outliers = boxplot(reg_data$expense, plot=FALSE)$OUT
+
+> #There are no outliers. But code below is how to remove if they did exist. 
+> reg_data_o = reg_data[-which(reg_data$expense %in% outliers), ]
+
+> #Correlation of important variables
+> #http://www.sthda.com/english/wiki/correlation-matrix-a-quick-start-guide-to-analyze-format-and-visualize-a-co .... [TRUNCATED] 
+
+> #Create correlation matrix. 
+> cor(cor_data)
+              csat    expense    percent     income      high    college
+csat     1.0000000 -0.4219295 -0.8706966 -0.4743627 0.0698007 -0.3131112
+expense -0.4219295  1.0000000  0.6392273  0.7259503 0.3810581  0.5582146
+percent -0.8706966  0.6392273  1.0000000  0.6786479 0.1603246  0.5969458
+income  -0.4743627  0.7259503  0.6786479  1.0000000 0.5153511  0.7920639
+high     0.0698007  0.3810581  0.1603246  0.5153511 1.0000000  0.6407739
+college -0.3131112  0.5582146  0.5969458  0.7920639 0.6407739  1.0000000
+
+> #Perform some graphs to look at relationship and distribution
+> attach(reg_data)
+
+> plot(csat, high)
+
+> plot(csat, college)
+
+> plot(csat, expense)
+
+> plot(csat, percent)
+
+> hist(csat)
+
+> hist(expense)
+
+> hist(percent)
+
+> #Apply transformation on percent variable. Relationship looks a bit curved from scatterplot.
+> plot(csat, percent)
+
+> #Perform transformation squared
+> reg_data$percent2 = reg_data$percent**2
+
+> #Look at results. Reatach dataset to bring in extra variable
+> attach(reg_data)
+
+> #This looks more curved. Try to go the other way. log transformation
+> plot(csat, percent2)
+
+> reg_data$percent3 = log(reg_data$percent)
+
+> #Look at results. Reatach dataset to bring in extra variable
+> attach(reg_data)
+
+> #This looks much better.
+> plot(csat, percent3)
+
+> #Perform regressions
+> #http://www.sthda.com/english/articles/40-regression-analysis/167-simple-linear-regression-in-r/
+> orig = lm(csat ~ expense + .... [TRUNCATED] 
+
+> #Summarize model results
+> summary(orig)
+
+Call:
+lm(formula = csat ~ expense + percent + income + high + college, 
+    data = reg_data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-46.475 -18.194   1.729  12.323  77.539 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 894.462768  57.783488  15.480  < 2e-16 ***
+expense       0.009385   0.004749   1.976  0.05441 .  
+percent      -2.760979   0.243652 -11.332 1.23e-14 ***
+income       -1.501676   1.244565  -1.207  0.23404    
+high          0.510448   1.018275   0.501  0.61867    
+college       5.674606   2.060506   2.754  0.00853 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 27.7 on 44 degrees of freedom
+Multiple R-squared:  0.8414,	Adjusted R-squared:  0.8234 
+F-statistic: 46.69 on 5 and 44 DF,  p-value: < 2.2e-16
+
+
+> tran1 = lm(csat ~ expense + percent2 + income + high + college, data = reg_data)
+
+> summary(tran1)
+
+Call:
+lm(formula = csat ~ expense + percent2 + income + high + college, 
+    data = reg_data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-70.813 -29.151   2.755  22.712 100.011 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 879.040020  82.140184  10.702 7.92e-14 ***
+expense       0.008964   0.006916   1.296   0.2017    
+percent2     -0.029334   0.004545  -6.453 7.26e-08 ***
+income       -2.760106   1.745514  -1.581   0.1210    
+high          0.789339   1.493992   0.528   0.5999    
+college       5.554753   3.006605   1.848   0.0714 .  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 39.31 on 44 degrees of freedom
+Multiple R-squared:  0.6808,	Adjusted R-squared:  0.6445 
+F-statistic: 18.77 on 5 and 44 DF,  p-value: 6.009e-10
+
+
+> tran2 = lm(csat ~ expense + percent3 + income + high + college, data = reg_data)
+
+> summary(tran2)
+
+Call:
+lm(formula = csat ~ expense + percent3 + income + high + college, 
+    data = reg_data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-42.232 -10.422   0.893   8.612  50.334 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 981.715910  41.302168  23.769   <2e-16 ***
+expense       0.007870   0.003259   2.415   0.0200 *  
+percent3    -75.892412   4.310138 -17.608   <2e-16 ***
+income       -0.945183   0.872316  -1.084   0.2845    
+high          1.684289   0.676056   2.491   0.0166 *  
+college       3.505050   1.390488   2.521   0.0154 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 19.33 on 44 degrees of freedom
+Multiple R-squared:  0.9228,	Adjusted R-squared:  0.914 
+F-statistic: 105.2 on 5 and 44 DF,  p-value: < 2.2e-16
+
+
+> #Analyze results. Which one had the best results?
+> 
+> #Export results to a nice formatting table. Through use of package
+> library(stargazer)
+
+> #https://www.princeton.edu/~otorres/NiceOutputR.pdf
+> stargazer(tran2, type = "text", out = "U:\\Documents\\workshops summer 2023\\R\\regression_tab ..." ... [TRUNCATED] 
+
+===============================================
+                        Dependent variable:    
+                    ---------------------------
+                               csat            
+-----------------------------------------------
+expense                       0.008**          
+                              (0.003)          
+                                               
+percent3                    -75.892***         
+                              (4.310)          
+                                               
+income                        -0.945           
+                              (0.872)          
+                                               
+high                          1.684**          
+                              (0.676)          
+                                               
+college                       3.505**          
+                              (1.390)          
+                                               
+Constant                    981.716***         
+                             (41.302)          
+                                               
+-----------------------------------------------
+Observations                    50             
+R2                             0.923           
+Adjusted R2                    0.914           
+Residual Std. Error      19.333 (df = 44)      
+F Statistic           105.151*** (df = 5; 44)  
+===============================================
+Note:               *p<0.1; **p<0.05; ***p<0.01
+
+> sink()

@@ -1,0 +1,181 @@
+-------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  U:\Documents\workshops summer 2023\summer repro package\Code\Stata
+> \../../Output/presidents_manipulation.log
+  log type:  text
+ opened on:  14 Jun 2023, 18:18:18
+
+. clear all
+
+. cd "../../Data/presidents"
+U:\Documents\workshops summer 2023\summer repro package\Data\presidents
+
+. 
+. import delimited using "president2008.csv", clear
+(encoding automatically selected: ISO-8859-1)
+(9 vars, 3,161 obs)
+
+. save president2008, replace
+file president2008.dta saved
+
+. 
+. import delimited using "president2012.csv", clear
+(encoding automatically selected: ISO-8859-1)
+(9 vars, 3,161 obs)
+
+. save president2012, replace
+file president2012.dta saved
+
+. 
+. import delimited using "president2016.csv", clear
+(encoding automatically selected: ISO-8859-1)
+(9 vars, 3,161 obs)
+
+. save president2016, replace
+file president2016.dta saved
+
+. 
+. import delimited using "president2020.csv", clear
+(encoding automatically selected: ISO-8859-1)
+(9 vars, 3,161 obs)
+
+. save president2020, replace
+file president2020.dta saved
+
+. 
+. use president2008, clear
+
+. merge 1:1 fips using president2012, nogen
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                             3,161  
+    -----------------------------------------
+
+. merge 1:1 fips using president2016, nogen
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                             3,161  
+    -----------------------------------------
+
+. merge 1:1 fips using president2020, nogen
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                             3,161  
+    -----------------------------------------
+
+. 
+. save master, replace
+file master.dta saved
+
+. keep if type == "County"
+(152 observations deleted)
+
+. 
+. gen demprop8 = democrat2008 / totalvote2008
+(2 missing values generated)
+
+. gen repprop8 = republican2008 / totalvote2008
+(2 missing values generated)
+
+. 
+. ttest demprop8 == repprop8
+
+Paired t test
+------------------------------------------------------------------------------
+Variable |     Obs        Mean    Std. err.   Std. dev.   [95% conf. interval]
+---------+--------------------------------------------------------------------
+demprop8 |   3,007    .4142162    .0025047    .1373467    .4093052    .4191273
+repprop8 |   3,007    .5692266    .0025028    .1372459    .5643191     .574134
+---------+--------------------------------------------------------------------
+    diff |   3,007   -.1550104     .005005    .2744566    -.164824   -.1451967
+------------------------------------------------------------------------------
+     mean(diff) = mean(demprop8 - repprop8)                       t = -30.9709
+ H0: mean(diff) = 0                              Degrees of freedom =     3006
+
+ Ha: mean(diff) < 0           Ha: mean(diff) != 0           Ha: mean(diff) > 0
+ Pr(T < t) = 0.0000         Pr(|T| > |t|) = 0.0000          Pr(T > t) = 1.0000
+
+. 
+. gen repprop20 = republican2020 / totalvote2020
+(2 missing values generated)
+
+. ttest repprop20 == repprop8
+
+Paired t test
+------------------------------------------------------------------------------
+Variable |     Obs        Mean    Std. err.   Std. dev.   [95% conf. interval]
+---------+--------------------------------------------------------------------
+reppr~20 |   3,006    .6532664     .002888     .158338    .6476039     .658929
+repprop8 |   3,006    .5693831    .0024988    .1370001    .5644836    .5742826
+---------+--------------------------------------------------------------------
+    diff |   3,006    .0838833    .0013865    .0760202    .0811647     .086602
+------------------------------------------------------------------------------
+     mean(diff) = mean(repprop20 - repprop8)                      t =  60.4981
+ H0: mean(diff) = 0                              Degrees of freedom =     3005
+
+ Ha: mean(diff) < 0           Ha: mean(diff) != 0           Ha: mean(diff) > 0
+ Pr(T < t) = 1.0000         Pr(|T| > |t|) = 0.0000          Pr(T > t) = 0.0000
+
+. 
+. sdtest democrat2008 == republican2008
+
+Variance ratio test
+------------------------------------------------------------------------------
+Variable |     Obs        Mean    Std. err.   Std. dev.   [95% conf. interval]
+---------+--------------------------------------------------------------------
+dem~2008 |   3,007    22469.52    1427.012    78251.78    19671.51    25267.54
+rep~2008 |   3,007    19327.65    829.2142    45470.89    17701.76    20953.53
+---------+--------------------------------------------------------------------
+Combined |   6,014    20898.59    825.4009    64009.83     19280.5    22516.67
+------------------------------------------------------------------------------
+    ratio = sd(democrat2008) / sd(republican2008)                 f =   2.9616
+H0: ratio = 1                                  Degrees of freedom = 3006, 3006
+
+    Ha: ratio < 1               Ha: ratio != 1                 Ha: ratio > 1
+  Pr(F < f) = 1.0000         2*Pr(F > f) = 0.0000           Pr(F > f) = 0.0000
+
+. 
+. 
+. 
+. reshape long totalvote democrat republican others write_ins none_of_these_can
+> didates, i(fips) j(year)
+(j = 2008 2012 2016 2020)
+
+Data                               Wide   ->   Long
+-----------------------------------------------------------------------------
+Number of observations            3,009   ->   12,036      
+Number of variables                  30   ->   13          
+j variable (4 values)                     ->   year
+xij variables:
+totalvote2008 totalvote2012 ... totalvote2020->totalvote
+democrat2008 democrat2012 ... democrat2020->   democrat
+republican2008 republican2012 ... republican2020->republican
+   others2008 others2012 ... others2020   ->   others
+write_ins2008 write_ins2012 ... write_ins2020->write_ins
+none_of_these_candidates2008 none_of_these_candidates2012 ... none_of_these_can
+> didates2020->none_of_these_candidates
+-----------------------------------------------------------------------------
+
+. 
+. *now perform some statistics.
+. *create proportions for %dem, %rep. 
+. gen demp = democrat / totalvote
+(8 missing values generated)
+
+. gen repp = republican / totalvote
+(8 missing values generated)
+
+. 
+. log close
+      name:  <unnamed>
+       log:  U:\Documents\workshops summer 2023\summer repro package\Code\Stata
+> \../../Output/presidents_manipulation.log
+  log type:  text
+ closed on:  14 Jun 2023, 18:18:22
+-------------------------------------------------------------------------------
